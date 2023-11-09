@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
-Name: datascience-tools
-Version: 0.0.1
-Summary: a few tools I have found handy to facilitate some datascience and machine learning tasks.
+Name: scikit-learn-whiskers
+Version: 0.1.0
+Summary: Tools aimed to facilitate some datascience and machine learning tasks.
 Author-email: Martin Carlos Araya <martinaraya@gmail.com>
 License: MIT License
         
@@ -25,8 +25,8 @@ License: MIT License
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
         
-Project-URL: Homepage, https://github.com/ayaranitram/datascience_tools
-Project-URL: Bug Tracker, https://github.com/ayaranitram/unyts/datascience_tools
+Project-URL: Homepage, https://github.com/ayaranitram/scikit-learn-whiskers
+Project-URL: Bug Tracker, https://github.com/ayaranitram/unyts/scikit-learn-whiskers
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
@@ -38,9 +38,9 @@ Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
-# `datascience_tools`
-A collection of tools for help with some tasks of machine learning and datascience studies.  
-These tools are intended to be compatible with scikit-learn utilities.
+# `scikit-learn-whiskers`
+A collection (only one at this time) of tools aimed to help with some tasks of machine learning and datascience studies.  
+These tools are intended to be compatible with scikit-learn utilities, and work properly inside a Pipeline.
 
 ## `WhiskerOutliers`
 A class to mark as **outliers** the values that can visually be identified as outliers from a typical _box and whiskers_ plot.
@@ -49,3 +49,6 @@ A class to mark as **outliers** the values that can visually be identified as ou
 - `NumPy`
 - `Pandas`
 - `Scikit-Learn`
+
+## Installation
+To install it: `pip git+https://github.com/ayaranitram/scikit-learn-whiskers`

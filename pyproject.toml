@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "datascience_tools"
+name = "scikit-learn-whiskers"
 version = "0.1.0"
 authors = [
   { name="Martin Carlos Araya", email="martinaraya@gmail.com" },
 ]
-description = "a few tools I have found handy to facilitate some datascience and machine learning tasks."
+description = "Tools aimed to facilitate some datascience and machine learning tasks."
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
@@ -24,5 +24,5 @@ classifiers = [
 dependencies = [
     ]
 [project.urls]
-"Homepage" = "https://github.com/ayaranitram/datascience_tools"
-"Bug Tracker" = "https://github.com/ayaranitram/unyts/datascience_tools"
+"Homepage" = "https://github.com/ayaranitram/scikit-learn-whiskers"
+"Bug Tracker" = "https://github.com/ayaranitram/unyts/scikit-learn-whiskers"
