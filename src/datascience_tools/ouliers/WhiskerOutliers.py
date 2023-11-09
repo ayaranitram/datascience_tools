@@ -1,17 +1,18 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 import numpy as np
-import seaborn as sns
+
+__version__ = '0.1.0'
 
 
 class WhiskerOutliers(BaseEstimator, TransformerMixin):
-    
+
     def __init__(self, threshold=3.0, add_indicator=False):
         self.threshold = threshold
         self.indicator = add_indicator
         self.min_ = None
         self.max_ = None
-        
+
     def fit(self, X, y=None):
         """
         Fit the instance on X.
@@ -32,12 +33,12 @@ class WhiskerOutliers(BaseEstimator, TransformerMixin):
         # calculate iqr
         iqr = abs(q3 - q1)
 
-        # calulate and retain the minimum and maximum limits of valid data
+        # calculate and retain the minimum and maximum limits of valid data
         self.min_ = q1 - (iqr * self.threshold)
         self.max_ = q3 + (iqr * self.threshold)
 
         return self
-        
+
     def transform(self, X, y=None):
         """
         Replace the outlier values by numpy.nan using the limits identified by the `fit` method.
@@ -55,13 +56,13 @@ class WhiskerOutliers(BaseEstimator, TransformerMixin):
         # procedure when the outlier indicator is required
         else:  # self.add_indicator
             if isinstance(X, pd.DataFrame):
-                return (X.mask(X < self.min_, np.nan).mask(X > self.max_, np.nan))\
+                return (X.mask(X < self.min_, np.nan).mask(X > self.max_, np.nan)) \
                     .merge((pd.DataFrame(data=0, columns=X.columns, index=X.index))
                            .mask(X < self.min_, -1).mask(X > self.max_, 1),
                            how='inner', left_index=True, right_index=True, suffixes=('', '_outlier')
                            )
             elif isinstance(X, pd.Series):
-                return (pd.DataFrame(X.mask(X < self.min_, np.nan).mask(X > self.max_, np.nan)))\
+                return (pd.DataFrame(X.mask(X < self.min_, np.nan).mask(X > self.max_, np.nan))) \
                     .merge((pd.DataFrame(data=0, columns=[X.name], index=X.index))
                            .mask(X < self.min_, -1).mask(X > self.max_, 1),
                            how='inner', left_index=True, right_index=True, suffixes=('', '_outlier')
@@ -71,7 +72,7 @@ class WhiskerOutliers(BaseEstimator, TransformerMixin):
                     np.where(X > self.max_, np.nan, np.where(X < self.min_, np.nan, X)),
                     np.where(X > self.max_, 1, np.where(X < self.min_, -1, 0))
                 ]
-    
+
     def fit_transform(self, X, y=None):
         """
         Fit to data, then transform it.
@@ -81,7 +82,7 @@ class WhiskerOutliers(BaseEstimator, TransformerMixin):
         """
         self.fit(X)
         return self.transform(X)
-    
+
     def get_params(self, deep=True):
         """
         Returns a dictionary with the parameters used in the instance.
