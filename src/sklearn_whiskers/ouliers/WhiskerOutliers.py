@@ -3,7 +3,7 @@ from sklearn.utils.validation import check_X_y, check_is_fitted, check_array
 import pandas as pd
 import numpy as np
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 class WhiskerOutliers(BaseEstimator, TransformerMixin):
