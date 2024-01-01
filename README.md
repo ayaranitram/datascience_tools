@@ -6,6 +6,10 @@ These tools are intended to be compatible with scikit-learn utilities, and work 
 A class to mark as **outliers** the values that can visually be identified as outliers from a typical _box and whiskers_ plot.  
 This class implements `.fit`, `transform` and `fit_transform`, as well as `get_params` and `set_params` methods as any standard scikit-learn implementation. 
   
+## `StandardOutliers`
+A class to mark as **outliers** the values outside the range _`threshold` * standard deviation_ around the _mean_.  
+This class implements `.fit`, `transform` and `fit_transform`, as well as `get_params` and `set_params` methods as any standard scikit-learn implementation.
+
 ## Requisites:  
 - `NumPy`
 - `Pandas`

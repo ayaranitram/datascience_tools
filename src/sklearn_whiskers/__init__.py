@@ -1,3 +1,4 @@
-from .ouliers.WhiskerOutliers import WhiskerOutliers
+from .outliers.WhiskerOutliers import WhiskerOutliers
+from .outliers.StandardOutliers import StandardOutliers
 
-__version__ = '0.1.1'
+__version__ = '0.2.0'

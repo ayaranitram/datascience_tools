@@ -1,4 +1,4 @@
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, OutlierMixin
 from sklearn.utils.validation import check_X_y, check_is_fitted, check_array
 import pandas as pd
 import numpy as np
@@ -6,9 +6,19 @@ import numpy as np
 __version__ = '0.1.1'
 
 
-class WhiskerOutliers(BaseEstimator, TransformerMixin):
+class WhiskerOutliers(OutlierMixin, BaseEstimator):
+    """
+    Estimator to identify and mark as outliers the values outside the range
+    `threshold` * _iqr_ below and above the first and third quartiles of the fitting data.
+    By default, values outside the range of 1.5 IQR from the 1st and 3rd quartile are considered outliers.
+    """
 
-    def __init__(self, threshold=3.0, add_indicator=False):
+    def __init__(self, threshold=1.5, add_indicator=False):
+        if hasattr(threshold, '__getitem__'):
+            if len(threshold) == 1:
+                threshold = threshold[0]
+            elif len(threshold) > 2:
+                raise ValueError("`threshold` must be float or array-like with size 2.")
         self.threshold = threshold
         self.add_indicator = add_indicator
 
@@ -19,6 +29,11 @@ class WhiskerOutliers(BaseEstimator, TransformerMixin):
         :param y: ignored
         :return: The fitted WhiskerOutliers instance
         """
+        if hasattr(self.threshold, '__getitem__'):
+            threshold_min, threshold_max = self.threshold[0], self.threshold[1]
+        else:
+            threshold_min, threshold_max = self.threshold, self.threshold
+
         if isinstance(X, pd.Series):
             X = X.values.reshape(-1, 1)
         # validate input
@@ -29,17 +44,15 @@ class WhiskerOutliers(BaseEstimator, TransformerMixin):
             q1 = X.quantile(0.25)
             q3 = X.quantile(0.75)
         else:  # elif isinstance(X, np.ndarray):
-            q1 = np.quantile(X, q=0.25, axis=0)
-            q3 = np.quantile(X, q=0.75, axis=0)
-        # else:
-        #     raise TypeError('X must be pandas.Series, pandas.DataFrame o numpy.array')
+            q1 = np.nanquantile(X, q=0.25, axis=0, method='linear')
+            q3 = np.nanquantile(X, q=0.75, axis=0, method='linear')
 
         # calculate iqr
         iqr = abs(q3 - q1)
 
         # calculate and retain the minimum and maximum limits of valid data
-        self.__dict__['min_'] = q1 - (iqr * self.threshold)
-        self.__dict__['max_'] = q3 + (iqr * self.threshold)
+        self.__dict__['min_'] = q1 - (iqr * threshold_min)
+        self.__dict__['max_'] = q3 + (iqr * threshold_max)
 
         return self
 

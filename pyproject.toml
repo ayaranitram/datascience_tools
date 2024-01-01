@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scikit-learn-whiskers"
-version = "0.1.1"
+version = "0.2.0"
 authors = [
   { name="Martin Carlos Araya", email="martinaraya@gmail.com" },
 ]
