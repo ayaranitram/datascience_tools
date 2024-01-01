@@ -11,16 +11,30 @@ class StandardOutliers(OutlierMixin, BaseEstimator):
     Estimator to identify and mark as outliers the values outside the range
     `threshold` * _standard deviation_ around the _mean_ of the fitting data.
     By default, values outside the range of 3 standard deviations around the media are considered outliers.
+
+    Methods:
+        fit_predict(X[, y]) : Perform fit on X and returns labels for X.
+        Returns -1 for outliers and 1 for inliers, if distinct is False.
+        Returns -1 for outliers below minimum, 1 for outliers above maximum and 0 for inliers, if distinct is True.
     """
 
-    def __init__(self, threshold=3.0, add_indicator=False):
-        if hasattr(threshold, '__getitem__'):
-            if len(threshold) == 1:
-                threshold = threshold[0]
-            elif len(threshold) > 2:
-                raise ValueError("`threshold` must be float or array-like with size 2.")
+    def __init__(self, threshold=3.0, mark_nan=True, add_indicator=False, distinct=True):
+        """
+        Create an instance of StandardOutliers
+        :param threshold: float
+        :param mark_nan: bool
+            return the original array with the outliers changed by numpy.nan
+        :param add_indicator: bool
+            append a flag indicating where the value was an outlier or not.
+        :param distinct: bool
+            change behaviour of `add_indicator`:
+            False: -1 for outliers and 1 for inliers, as indicated by scikit-learn documentation.
+            True: -1 for outliers below minimum, 1 for outliers above maximum and 0 for inliers.
+        """
         self.threshold = threshold
+        self.mark_nan = mark_nan
         self.add_indicator = add_indicator
+        self.distinct = distinct
 
     def fit(self, X, y=None, mean=None, std=None):
         """
@@ -34,7 +48,11 @@ class StandardOutliers(OutlierMixin, BaseEstimator):
         :return: The fitted StandardOutliers instance
         """
         if hasattr(self.threshold, '__getitem__'):
-            threshold_min, threshold_max = self.threshold[0], self.threshold[1]
+            if len(self.threshold) == 1:
+                threshold = [self.threshold[0], self.threshold[0]]
+            elif len(self.threshold) > 2:
+                raise ValueError("`threshold` must be float or array-like with size 2.")
+            threshold_min, threshold_max = threshold[0], threshold[1]
         else:
             threshold_min, threshold_max = self.threshold, self.threshold
 
@@ -108,28 +126,6 @@ class StandardOutliers(OutlierMixin, BaseEstimator):
 
         return self
 
-    def predict(self, X, y=None):
-        # check if instance has been fitted
-        check_is_fitted(self, ['min_', 'max_'])
-
-        if isinstance(X, pd.Series):
-            X, meta = X.values.reshape(-1, 1), {'index': X.index, 'dtype': X.dtype, 'name': X.name}
-        else:
-            meta = None
-
-        # validate input
-        check_array(X)
-
-        # procedure when the outlier add_indicator is required
-        if isinstance(X, pd.DataFrame):
-            return pd.DataFrame(data=1, columns=X.columns, index=X.index) \
-                .mask(X < self.min_, -1).mask(X > self.max_, -1)
-        elif isinstance(X, pd.Series):
-            return pd.DataFrame(data=1, columns=[X.name], index=X.index) \
-                .mask(X < self.min_, -1).mask(X > self.max_, -1)
-        else:  # elif isinstance(X, np.ndarray):
-            return np.where(X > self.max_, -1, np.where(X < self.min_, -1, 1))
-
     def transform(self, X, y=None):
         """
         Replace the outlier values by numpy.nan using the limits identified by the `fit` method.
@@ -148,8 +144,14 @@ class StandardOutliers(OutlierMixin, BaseEstimator):
         # validate input
         check_array(X)
 
-        # procedure when the outlier add_indicator is not required
-        if not self.add_indicator:
+        # set identifiers according to distinct parameter
+        if self.distinct:
+            outlier_low, inlier, outlier_hi = -1, 0, 1
+        else:
+            outlier_low, inlier, outlier_hi = -1, 1, -1
+
+        # procedure when the changing the outliers to NaN is required but add_indicator is not required
+        if self.mark_nan and not self.add_indicator:
             if isinstance(X, (pd.Series, pd.DataFrame)):
                 return X.mask(X < self.min_, np.nan).mask(X > self.max_, np.nan)
             elif meta is not None:
@@ -160,8 +162,8 @@ class StandardOutliers(OutlierMixin, BaseEstimator):
             else:  # elif isinstance(X, np.ndarray):
                 return np.where(X > self.max_, np.nan, np.where(X < self.min_, np.nan, X))
 
-        # procedure when the outlier add_indicator is required
-        else:  # self.add_indicator
+        # procedure when changing the outlier to NaN is required as well as the add_indicator is required
+        elif self.mark_nan and self.add_indicator:
             if isinstance(X, pd.DataFrame):
                 return (X.mask(X < self.min_, np.nan).mask(X > self.max_, np.nan)) \
                     .merge((pd.DataFrame(data=0, columns=X.columns, index=X.index))
@@ -188,7 +190,38 @@ class StandardOutliers(OutlierMixin, BaseEstimator):
                     np.where(X > self.max_, 1, np.where(X < self.min_, -1, 0))
                 ]
 
-    def fit_predict(self, X, y=None):
+        # procedure when changing the outlier to NaN is not required but the add_indicator is required
+        elif not self.mark_nan and self.add_indicator:
+            if isinstance(X, pd.DataFrame):
+                return pd.DataFrame(data=inlier, columns=X.columns, index=X.index)\
+                    .mask(X < self.min_, outlier_low).mask(X > self.max_, outlier_hi)
+            elif isinstance(X, pd.Series):
+                return pd.Series(data=inlier, name=X.name, index=X.index)\
+                    .mask(X < self.min_, outlier_low).mask(X > self.max_, outlier_hi)
+            elif meta is not None:
+                return pd.Series(
+                    data=np.where(X > self.max_, outlier_hi, np.where(X < self.min_, outlier_low, inlier)).flatten(),
+                    name=meta['name'], index=meta['index']
+                )
+            else:  # elif isinstance(X, np.ndarray):
+                return np.where(X > self.max_, outlier_hi, np.where(X < self.min_, outlier_low, inlier))
+
+        # both parameters are False, return the original X
+        else:
+            if isinstance(X, (pd.Series, pd.DataFrame)):
+                return X
+            elif meta is not None:
+                return pd.Series(data=X, name=meta['name'], index=meta['index'])
+            else:
+                return X
+
+    def predict(self, X, y=None):
+        """
+        alias for `transform`
+        """
+        return self.transform(X=X, y=y)
+
+    def fit_transform(self, X, y=None):
         """
         Fit to data, then transform it.
         :param X: array-like of shape (n_samples, n_features)
@@ -197,6 +230,12 @@ class StandardOutliers(OutlierMixin, BaseEstimator):
         """
         self.fit(X)
         return self.transform(X)
+
+    def fit_predict(self, X, y=None):
+        """
+        alias for `fit_transform`
+        """
+        return self.fit_transform(X=X, y=y)
 
     def get_params(self, deep=True):
         """

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: scikit-learn-whiskers
-Version: 0.2.0
+Version: 0.3.0
 Summary: Tools aimed to facilitate some datascience and machine learning tasks.
 Author-email: Martin Carlos Araya <martinaraya@gmail.com>
 License: MIT License
